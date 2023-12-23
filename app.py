@@ -1,11 +1,15 @@
 import requests
 import urllib.parse
 import base64
+import json
 from flask import Flask, redirect, request
+from collections import defaultdict
 
 # Spotify API endpoints
 SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize'
 AUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
+ALL_PLAYLISTS_URL = 'https://api.spotify.com/v1/me/playlists'
+USER_INFO_URL = 'https://api.spotify.com/v1/me'
 
 # Client keys
 CLIENT_ID = '8717281952454dbd9264dd61b3f49c51'
@@ -26,6 +30,47 @@ def get_auth_url():
 
     url = f'{SPOTIFY_AUTH_URL}?{urllib.parse.urlencode(params)}'
     return url
+
+def get_user_id(access_token):
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.get(url=USER_INFO_URL, headers=headers)
+    user_info = response.json()
+
+    return user_info['id']
+
+def get_owned_playlists(access_token):
+    url = ALL_PLAYLISTS_URL
+    user_id = get_user_id(access_token)
+
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    owned_playlists_ids = {}
+
+    while url:
+        response = requests.get(url=url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to retrieve data, status code: {response.status_code}")
+            break
+
+        data = response.json()
+
+        for item in data['items']:
+            if item['owner']['id'] == user_id:
+                image_url = item['images'][0]['url'] if item['images'] else None
+
+                owned_playlists_ids[item['name']] = {
+                    'url': image_url,
+                    'id': item['id']
+                }
+
+        url = data.get('next')
+
+    return owned_playlists_ids
 
 # Routes
 @app.route('/')
@@ -65,16 +110,19 @@ def spotify_callback():
         }
 
         response = requests.post(url=AUTH_TOKEN_URL, headers=headers, data=data)
+
         if response.status_code != 200:
             return f'Failed to retrieve token, status code: {response.status_code}', 500
 
         access_token_info = response.json()
         access_token = access_token_info['access_token']
 
-        # Use the access token to access Spotify API or save it for later use
-        # ...
+        # From the user ID, loop through list of playlists in their library and create list of playlist IDs owned by them
+        playlists_info = get_owned_playlists(access_token)
+        
 
-        return f'Authentication successful! You may close this browser now.'
+        return playlists_info
+        # return f'Authentication successful! You may close this browser now.'
 
     return 'No code provided by Spotify', 400
 
