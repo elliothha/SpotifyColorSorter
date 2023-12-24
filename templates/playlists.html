@@ -20,13 +20,36 @@
     </style>
 </head>
 <body>
-    <div class="grid-container">
+    <div class="playlists">
         {% for name, details in playlists.items() %}
-            <div class="grid-item">
+            <div class="playlist">
                 <img src="{{ details.url }}" alt="{{ name }}">
-                <p>{{ name }}</p>
+                <button class="sort-btn" data-playlist-id="{{ details.id }}">{{ name }}</button>
             </div>
         {% endfor %}
-    </div>
+    </div>    
 </body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click event listener to each sorting button, on click, calls the sortPlaylist function below with the ID
+        document.querySelectorAll('.sort-btn').forEach(function(button) {
+            button.onclick = function() {
+                const playlistId = this.getAttribute('data-playlist-id');
+                sortPlaylist(playlistId);
+            };
+        });
+    });
+    
+    function sortPlaylist(playlistId) {
+        // Send an AJAX request to your Flask route
+        fetch('/sort_playlist/' + playlistId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message); // Show a success message
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
 </html>
