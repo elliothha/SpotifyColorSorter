@@ -3,6 +3,9 @@ import urllib.parse
 import base64
 import colorsys
 import math
+import numpy as np
+import cv2
+import time
 from PIL import Image
 from io import BytesIO
 from flask import Flask, redirect, request, render_template, url_for, session, jsonify
@@ -32,9 +35,18 @@ def download_image(url):
 def rgb_to_hsv(rgb):
     return colorsys.rgb_to_hsv(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
 
+def rgb_to_lab(rgb_color):
+    # Convert RGB to OpenCV format (BGR format)
+    bgr_color = rgb_color[::-1]
+
+    # Convert to L*a*b* color space
+    lab_color = cv2.cvtColor(np.uint8([[bgr_color]]), cv2.COLOR_BGR2LAB)[0][0]
+
+    return lab_color
+
 def get_dominant_color(image, palette_size=16):
     # Resize for efficiency
-    image.thumbnail((100, 100))
+    image.thumbnail((300, 300))
     paletted = image.convert('P', palette=Image.ADAPTIVE, colors=palette_size)
     palette = paletted.getpalette()
     color_counts = sorted(paletted.getcolors(), reverse=True)
@@ -45,6 +57,19 @@ def get_dominant_color(image, palette_size=16):
 def hsv_color_distance(hsv1, hsv2):
     # Euclidean distance in HSV space
     return math.sqrt(sum((c1 - c2) ** 2 for c1, c2 in zip(hsv1, hsv2)))
+
+def lab_color_distance(lab1, lab2):
+    # Cast to a larger type to avoid overflow
+    lab1 = np.array(lab1, dtype=np.float64)
+    lab2 = np.array(lab2, dtype=np.float64)
+
+    # Euclidean distance calculation
+    return np.sqrt(np.sum((lab1 - lab2) ** 2))
+
+def chunk_list(lst, chunk_size):
+    """Yield successive chunk_size chunks from lst."""
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i:i + chunk_size]
 
 # API Getter Methods
 def get_auth_url():
@@ -107,6 +132,8 @@ def get_track_info(access_token, playlist_id):
     }
 
     track_info = {}
+    not_in = 0
+    in_count = 0
 
     while url:
         response = requests.get(url=url, headers=headers)
@@ -115,11 +142,21 @@ def get_track_info(access_token, playlist_id):
             break
 
         data = response.json()
+        print(f'HOW MANY TRACKS HERE: {len(data["items"])}')
 
         for item in data['items']:
-            track_info[item['track']['id']] = item['track']['album']['images'][0]['url']
+            track_id = item['track']['id']
+            image_url = item['track']['album']['images'][0]['url'] if item['track']['album']['images'] else None
+            if track_id not in track_info:
+                not_in += 1
+            else:
+                in_count += 1
+
+            track_info[track_id] = image_url
 
         url = data.get('next')
+        print(f'NOT IN COUNT: {not_in}, IN COUNT: {in_count}')
+        print(f'NEXT URL IS {url}')
     
     return track_info
 
@@ -186,27 +223,33 @@ def sorter():
 
 @app.route('/sort_playlist/<playlist_id>')
 def sort_playlist(playlist_id):
+    print(f'Successfully started sorting route for {playlist_id}')
+
     access_token = session.get('access_token')
     track_info = get_track_info(access_token, playlist_id)
+    print(f'LENGTH OF TRACK_INFO: {len(track_info)}')
     
     tracks_with_colors = []
 
     for track_id, image_url in track_info.items():
         img = download_image(image_url)
         dominant_color = get_dominant_color(img)
-        tracks_with_colors.append((track_id, dominant_color))
+        # print(f'DOMINANT COLOR: {dominant_color}')
+        tracks_with_colors.append((track_id, rgb_to_lab(dominant_color)))
 
-    # Convert to HSV and sort by hue
-    # tracks_with_colors.sort(key=lambda x: rgb_to_hsv(x[1])[0])
+    print('Successfully obtained tracks with colors from playlist')
+    print(f'LENGTH OF TRACKS_WITH_COLORS): {len(tracks_with_colors)}')
 
     # Choose a starting reference color, for example, the first color in the list
     reference_color = tracks_with_colors[0][1]
 
     # Sort the tracks based on color distance from the reference color
-    tracks_with_colors.sort(key=lambda x: hsv_color_distance(x[1], reference_color))
+    tracks_with_colors.sort(key=lambda x: lab_color_distance(x[1], reference_color))
+    print('Successfully implemented sorting algorithm')
 
     # Extract sorted track IDs
     sorted_track_ids = [track[0] for track in tracks_with_colors]
+    print(f'LENGTH OF SORTED_TRACK_IDS: {len(sorted_track_ids)}')
 
     # replace the tracks with the sorted order
     url = f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks'
@@ -218,16 +261,32 @@ def sort_playlist(playlist_id):
 
     # Convert track IDs to Spotify URI format
     track_uris = [f'spotify:track:{track_id}' for track_id in sorted_track_ids]
-    data = {'uris': track_uris}
-    
-    response = requests.put(url, json=data, headers=headers)
+    print(f'LENGTH OF TRACK_URIS: {len(track_uris)}')
+    # Split track URIs into chunks of 100
+    track_uri_chunks = list(chunk_list(track_uris, 100))
+    print(track_uri_chunks)
 
-    if response.status_code != 200:
-        return jsonify({
-            'status': 'error', 
-            'message': 'Failed to update playlist',
-            'response': response.json()
-        })
+    # Loop through each chunk and update the playlist
+    for i, chunk in enumerate(track_uri_chunks):
+        data = {'uris': chunk}
+        if i == 0:
+            response = requests.put(url=url, json=data, headers=headers)
+        else:
+            response = requests.post(url=url, json=data, headers=headers)
+        print(f'Chunk: {i}, Total tracks: {len(chunk)}, Response code: {response.status_code}, Response body: {response.json()}')
+
+        if response.status_code not in [200, 201]:
+            print(f'Error updating playlist: {response.json()}')
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to update playlist',
+                'response': response.json()
+            })
+
+        # Optional: sleep to avoid hitting rate limits
+        time.sleep(0.1)
+
+    print('Successfully finished sorting')
 
     return jsonify({'status': 'success', 'message': 'Playlist sorted successfully'})
 

@@ -1,0 +1,6 @@
+1. Rework html frontend
+    a. Maybe add a loading bar for the processing part
+2. Implement better color heuristic
+    b. Can use a set of dominant colors rather than 1 dominant color. 
+        The palette should already give this set. Just need to implement the logic
+3. Clean up code and make it production ready
