@@ -1,9 +1,7 @@
 import requests
 import urllib.parse
 import base64
-import json
-from flask import Flask, redirect, request
-from collections import defaultdict
+from flask import Flask, redirect, request, render_template, url_for, session
 
 # Spotify API endpoints
 SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize'
@@ -18,6 +16,7 @@ REDIRECT_URI = 'http://localhost:8888/callback'
 SCOPE = 'user-read-private playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public'
 
 app = Flask(__name__)
+app.secret_key = '1234'
 
 # Helper Methods
 def get_auth_url():
@@ -60,7 +59,7 @@ def get_owned_playlists(access_token):
         data = response.json()
 
         for item in data['items']:
-            if item['owner']['id'] == user_id:
+            if item['tracks']['total'] > 0 and item['owner']['id'] == user_id:
                 image_url = item['images'][0]['url'] if item['images'] else None
 
                 owned_playlists_ids[item['name']] = {
@@ -85,6 +84,7 @@ def login():
     url_args = '&'.join(['{}={}'.format(key, urllib.parse.quote(val)) for key, val in auth_query_parameters.items()])
     auth_url = '{}/?{}'.format(SPOTIFY_AUTH_URL, url_args)
     return redirect(auth_url)
+
 
 @app.route('/callback')
 def spotify_callback():
@@ -116,15 +116,20 @@ def spotify_callback():
 
         access_token_info = response.json()
         access_token = access_token_info['access_token']
+        session['access_token'] = access_token
 
-        # From the user ID, loop through list of playlists in their library and create list of playlist IDs owned by them
-        playlists_info = get_owned_playlists(access_token)
-        
-
-        return playlists_info
-        # return f'Authentication successful! You may close this browser now.'
+        return redirect(url_for('sorter'))
 
     return 'No code provided by Spotify', 400
+
+
+@app.route('/sorter')
+def sorter():
+    access_token = session.get('access_token')
+    playlists = get_owned_playlists(access_token=access_token)
+
+    return render_template('playlists.html', playlists=playlists)
+
 
 if __name__ == '__main__':
     app.run(host='localhost', port=8888, debug=True)

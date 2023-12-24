@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Color Sorter</title>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 columns */
+            grid-gap: 10px; /* space between items */
+        }
+        .grid-item {
+            text-align: center;
+        }
+        .grid-item img {
+            width: 100%; /* make image fill the container */
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-container">
+        {% for name, details in playlists.items() %}
+            <div class="grid-item">
+                <img src="{{ details.url }}" alt="{{ name }}">
+                <p>{{ name }}</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
