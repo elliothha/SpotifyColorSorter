@@ -1,0 +1,81 @@
+/* 
+Header color: #ffffff
+Paragraph color: #A7A7A7
+Background color: #121212
+Playlist background color: #181818
+Playlist background color on hover: #282828
+Button color: #1db954
+Button color on hover: #1ed760
+*/
+
+@font-face {
+    font-family: 'Circular';
+    src: url('../fonts/circular-500.ttf.ttf') format('truetype');
+}
+
+body {
+    font-family: 'circular-500', sans-serif;
+    background-color: #121212;
+}
+
+h1, h2, h3, h4 { color: #ffffff; }
+
+h1 { margin: 50px 0px 0px 40px; }
+
+.grid-container {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    grid-gap: 20px; /* space between items */
+
+    margin: 50px;
+}
+
+.grid-item {
+    text-align: center;
+    background-color: #181818;
+    
+    border-radius: 20px;
+    padding-bottom: 0px;
+    transition-duration: 0.25s;
+}
+
+.grid-item:hover { 
+    cursor: pointer; 
+    background-color: #282828;
+}
+
+.grid-btn {
+    text-align: right;
+
+    margin: 20px 20px 20px 0px;
+}
+
+.grid-item img {
+    width: 90%;
+    height: auto;
+
+    border-radius: 20px;
+    margin-top: 20px;
+}
+
+.grid-item h3, p {
+    text-align: left;
+
+    margin-left: 20px;
+}
+
+.grid-item button {
+    border: none;
+    font-weight: bold;
+    background-color: #1db954;
+
+    border-radius: 5px;
+    padding: 5px 10px;
+    transition-duration: 0.25s;
+}
+
+.grid-item button:hover {
+    cursor: pointer;
+    background-color: #1ed760;
+}

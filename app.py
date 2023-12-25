@@ -25,7 +25,6 @@ SCOPE = 'user-read-private playlist-read-private playlist-read-collaborative pla
 app = Flask(__name__)
 app.secret_key = '1234'
 
-
 # Helper Methods
 def download_image(url):
     response = requests.get(url)
@@ -36,16 +35,12 @@ def rgb_to_hsv(rgb):
     return colorsys.rgb_to_hsv(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
 
 def rgb_to_lab(rgb_color):
-    # Convert RGB to OpenCV format (BGR format)
     bgr_color = rgb_color[::-1]
-
-    # Convert to L*a*b* color space
     lab_color = cv2.cvtColor(np.uint8([[bgr_color]]), cv2.COLOR_BGR2LAB)[0][0]
 
     return lab_color
 
 def get_dominant_color(image, palette_size=16):
-    # Resize for efficiency
     image.thumbnail((300, 300))
     paletted = image.convert('P', palette=Image.ADAPTIVE, colors=palette_size)
     palette = paletted.getpalette()
@@ -55,19 +50,16 @@ def get_dominant_color(image, palette_size=16):
     return dominant_color
 
 def hsv_color_distance(hsv1, hsv2):
-    # Euclidean distance in HSV space
     return math.sqrt(sum((c1 - c2) ** 2 for c1, c2 in zip(hsv1, hsv2)))
 
 def lab_color_distance(lab1, lab2):
-    # Cast to a larger type to avoid overflow
     lab1 = np.array(lab1, dtype=np.float64)
     lab2 = np.array(lab2, dtype=np.float64)
 
-    # Euclidean distance calculation
     return np.sqrt(np.sum((lab1 - lab2) ** 2))
 
 def chunk_list(lst, chunk_size):
-    """Yield successive chunk_size chunks from lst."""
+    '''Yield successive chunk_size chunks from lst.'''
     for i in range(0, len(lst), chunk_size):
         yield lst[i:i + chunk_size]
 
@@ -83,7 +75,7 @@ def get_auth_url():
     url = f'{SPOTIFY_AUTH_URL}?{urllib.parse.urlencode(params)}'
     return url
 
-def get_user_id(access_token):
+def get_user_info(access_token):
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
@@ -91,11 +83,12 @@ def get_user_id(access_token):
     response = requests.get(url=USER_INFO_URL, headers=headers)
     user_info = response.json()
 
-    return user_info['id']
+    return user_info
 
 def get_owned_playlists(access_token):
     url = ALL_PLAYLISTS_URL
-    user_id = get_user_id(access_token)
+    user_info = get_user_info(access_token)
+    user_id = user_info['id']
 
     headers = {
         'Authorization': f'Bearer {access_token}'
@@ -113,12 +106,14 @@ def get_owned_playlists(access_token):
 
         for item in data['items']:
             if item['tracks']['total'] > 0 and item['owner']['id'] == user_id:
-                image_url = item['images'][0]['url'] if item['images'] else None
+                if item['images']:
+                    image_url = item['images'][0]['url']
 
-                owned_playlists_ids[item['name']] = {
-                    'url': image_url,
-                    'id': item['id']
-                }
+                    owned_playlists_ids[item['name']] = {
+                        'url': image_url,
+                        'id': item['id'],
+                        'num_tracks': item['tracks']['total']
+                    }
 
         url = data.get('next')
 
@@ -175,7 +170,6 @@ def login():
     auth_url = '{}/?{}'.format(SPOTIFY_AUTH_URL, url_args)
     return redirect(auth_url)
 
-
 @app.route('/callback')
 def spotify_callback():
     error = request.args.get('error')
@@ -212,14 +206,13 @@ def spotify_callback():
 
     return 'No code provided by Spotify', 400
 
-
 @app.route('/sorter')
 def sorter():
     access_token = session.get('access_token')
+    user_info = get_user_info(access_token=access_token)
     playlists = get_owned_playlists(access_token=access_token)
 
-    return render_template('playlists.html', playlists=playlists)
-
+    return render_template('playlists.html', user_name=user_info['display_name'], playlists=playlists)
 
 @app.route('/sort_playlist/<playlist_id>')
 def sort_playlist(playlist_id):

@@ -4,52 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Color Sorter</title>
-    <style>
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 columns */
-            grid-gap: 10px; /* space between items */
-        }
-        .grid-item {
-            text-align: center;
-        }
-        .grid-item img {
-            width: 100%; /* make image fill the container */
-            height: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="playlists">
-        {% for name, details in playlists.items() %}
-            <div class="playlist">
-                <img src="{{ details.url }}" alt="{{ name }}">
-                <button class="sort-btn" data-playlist-id="{{ details.id }}">{{ name }}</button>
+    <h1>{{ user_name }}'s Playlists</h1>
+    <div class="playlists grid-container">
+        {% for playlist_name, playlist_details in playlists.items() %}
+            <div class="grid-item">
+                <img src="{{ playlist_details.url }}" alt="{{ playlist_name }}">
+                <h3>{{ playlist_name }}</h3>
+                <p style="color: #A7A7A7">{{ playlist_details.num_tracks }} Tracks</p>
+                <div class="grid-btn">
+                    <button class="sort-btn" data-playlist-id="{{ playlist_details.id }}">SORT</button>
+                </div>
             </div>
         {% endfor %}
-    </div>    
+    </div>  
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/script.js') }}">  
 </body>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add click event listener to each sorting button, on click, calls the sortPlaylist function below with the ID
-        document.querySelectorAll('.sort-btn').forEach(function(button) {
-            button.onclick = function() {
-                const playlistId = this.getAttribute('data-playlist-id');
-                sortPlaylist(playlistId);
-            };
-        });
-    });
-    
-    function sortPlaylist(playlistId) {
-        // Send an AJAX request to your Flask route
-        fetch('/sort_playlist/' + playlistId)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert(data.message); // Show a success message
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
-</script>
 </html>
