@@ -79,3 +79,16 @@ h1 { margin: 50px 0px 0px 40px; }
     cursor: pointer;
     background-color: #1ed760;
 }
+
+#overlay {
+    position: fixed; /* Sit on top of the page content */
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+    z-index: 2; /* Specify a stack order in case you're using a layered layout */
+    cursor: progress;
+}

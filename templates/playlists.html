@@ -8,6 +8,7 @@
 </head>
 <body>
     <h1>{{ user_name }}'s Playlists</h1>
+    
     <div class="playlists grid-container">
         {% for playlist_name, playlist_details in playlists.items() %}
             <div class="grid-item">
@@ -19,7 +20,10 @@
                 </div>
             </div>
         {% endfor %}
-    </div>  
+    </div>
+
+    <div id="overlay" style="display: none;"></div>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

@@ -3,20 +3,36 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.sort-btn').forEach(function(button) {
         button.onclick = function() {
             const playlistId = this.getAttribute('data-playlist-id');
-            alert(playlistId)
             sortPlaylist(playlistId);
         };
     });
 });
 
+function showOverlay() {
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function hideOverlay() {
+    document.getElementById('overlay').style.display = 'none';
+}
+
 function sortPlaylist(playlistId) {
+    showOverlay();
+
     // Send an AJAX request to your Flask route
     fetch('/sort_playlist/' + playlistId)
         .then(response => response.json())
         .then(data => {
+            hideOverlay();
             if (data.status === 'success') {
                 alert(data.message); // Show a success message
+            } else {
+                alert('Sorting failed. Sorry!')
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            hideOverlay();
+            console.error('Error:', error)
+        });
 }
+
