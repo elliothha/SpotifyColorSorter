@@ -1,8 +1,0 @@
-
-2. Implement better color heuristic
-    b. Can use a set of dominant colors rather than 1 dominant color. 
-        The palette should already give this set. Just need to implement the logic
-
-3. Clean up code and make it production ready
-
-4. Move to actual frontend instead of local

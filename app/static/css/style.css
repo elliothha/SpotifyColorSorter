@@ -35,13 +35,12 @@ h1 { margin: 50px 0px 0px 40px; }
     text-align: center;
     background-color: #181818;
     
-    border-radius: 20px;
+    border-radius: 10px;
     padding-bottom: 0px;
     transition-duration: 0.25s;
 }
 
 .grid-item:hover { 
-    cursor: pointer; 
     background-color: #282828;
 }
 
@@ -55,7 +54,7 @@ h1 { margin: 50px 0px 0px 40px; }
     width: 90%;
     height: auto;
 
-    border-radius: 20px;
+    border-radius: 10px;
     margin-top: 20px;
 }
 
