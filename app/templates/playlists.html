@@ -12,15 +12,16 @@
     <div class="playlists grid-container">
         {% for playlist_name, playlist_details in playlists.items() %}
             <div class="grid-item">
-                <img src="{{ playlist_details.url }}" alt="{{ playlist_name }}">
+                <img src="{{ playlist_details['image_url'] }}" alt="{{ playlist_name }}">
                 <h3>{{ playlist_name }}</h3>
-                <p style="color: #A7A7A7">{{ playlist_details.num_tracks }} Tracks</p>
+                <p style="color: #A7A7A7">{{ playlist_details['num_tracks'] }} Tracks</p>
                 <div class="grid-btn">
-                    <button class="sort-btn" data-playlist-id="{{ playlist_details.id }}">SORT</button>
+                    <button class="sort-btn" data-playlist-id="{{ playlist_details['playlist_id'] }}">SORT</button>
                 </div>
             </div>
         {% endfor %}
     </div>
+    
 
     <div id="overlay" style="display: none;"></div>
 

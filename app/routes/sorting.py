@@ -2,18 +2,19 @@
 import requests
 import time
 
-from flask import current_app, session, render_template, jsonify
+from flask import Blueprint, session, render_template, jsonify
 
-from ..api import get_user_info, get_owned_playlists, get_track_info
-from ..utils import download_image, get_dominant_color, rgb_to_lab, lab_color_distance
+from ..api.spotify import get_user_info, get_track_info, get_owned_playlists
+from ..utils.image_processing import download_image, get_dominant_color, rgb_to_lab, lab_color_distance
 
+sorting_bp = Blueprint('sorting', __name__)
 
 def chunk_list(lst, chunk_size):
     '''Yield successive chunk_size chunks from lst.'''
     for i in range(0, len(lst), chunk_size):
         yield lst[i:i + chunk_size]
 
-@current_app.route('/sorter')
+@sorting_bp.route('/sorter')
 def sorter():
     access_token = session.get('access_token')
     user_info = get_user_info(access_token)
@@ -21,7 +22,7 @@ def sorter():
 
     return render_template('playlists.html', user_name=user_info['display_name'], playlists=playlists)
 
-@current_app.route('/sort_playlist/<playlist_id>')
+@sorting_bp.route('/sort_playlist/<playlist_id>')
 def sort_playlist(playlist_id):
     print(f'Successfully started sorting route for {playlist_id}')
 

@@ -18,11 +18,8 @@ Functions:
 import requests
 import urllib.parse
 
-from flask import current_app, session
+from flask import current_app
 from app import REDIRECT_URI, SCOPE
-
-CLIENT_ID = current_app.config['CLIENT_ID']
-CLIENT_SECRET = current_app.config['CLIENT_SECRET']
 
 # Spotify API endpoints
 SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize'
@@ -31,6 +28,7 @@ USER_INFO_URL = 'https://api.spotify.com/v1/me'
 USER_PLAYLISTS_URL = 'https://api.spotify.com/v1/me/playlists'
 
 def get_auth_url():
+    CLIENT_ID = current_app.config['CLIENT_ID']
     params = {
         'response_type': 'code',
         'redirect_uri': REDIRECT_URI,
