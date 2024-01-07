@@ -60,32 +60,44 @@ def sort_playlist(playlist_id):
         'Content-Type': 'application/json'
     }
 
+    clear_data = {'uris': []}
+    clear_response = requests.put(url=url, json=clear_data, headers=headers)
+
+    if clear_response.status_code not in [200, 201]:
+        print(f'Error clearing playlist: {clear_response.json()}')
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to clear playlist',
+            'response': clear_response.json()
+        })
+
     # Convert track IDs to Spotify URI format
     track_uris = [f'spotify:track:{track_id}' for track_id in sorted_track_ids]
     print(f'LENGTH OF TRACK_URIS: {len(track_uris)}')
     # Split track URIs into chunks of 100
     track_uri_chunks = list(chunk_list(track_uris, 100))
     print(track_uri_chunks)
-
-    # Loop through each chunk and update the playlist
-    for i, chunk in enumerate(track_uri_chunks):
-        data = {'uris': chunk}
-        if i == 0:
-            response = requests.put(url=url, json=data, headers=headers)
-        else:
+    
+    if len(track_uri_chunks) == 1:
+        data = {'uris': track_uri_chunks[0]}
+        response = requests.put(url=url, json=data, headers=headers)
+    else:
+        # Loop through each chunk and update the playlist
+        for i, chunk in enumerate(track_uri_chunks):
+            data = {'uris': chunk}
             response = requests.post(url=url, json=data, headers=headers)
-        print(f'Chunk: {i}, Total tracks: {len(chunk)}, Response code: {response.status_code}, Response body: {response.json()}')
+            print(f'Chunk: {i}, Total tracks: {len(chunk)}, Response code: {response.status_code}, Response body: {response.json()}')
 
-        if response.status_code not in [200, 201]:
-            print(f'Error updating playlist: {response.json()}')
-            return jsonify({
-                'status': 'error',
-                'message': 'Failed to update playlist',
-                'response': response.json()
-            })
+            if response.status_code not in [200, 201]:
+                print(f'Error updating playlist: {response.json()}')
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Failed to update playlist',
+                    'response': response.json()
+                })
 
-        # sleep to avoid hitting rate limits
-        time.sleep(0.1)
+            # sleep to avoid hitting rate limits
+            time.sleep(0.1)
 
     print('Successfully finished sorting')
 
