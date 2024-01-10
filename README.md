@@ -1,6 +1,6 @@
 # Spotify Color Sorter
 
-A locally run application to sort personal Spotify playlists by the songs' album cover colors.
+A locally run application to sort personal Spotify playlists by song album cover colors.
 Utilizes the Spotify Web API and OAuth 2.0 system to securely access only user playlist data. Does not track any data.
 
 ## Description
