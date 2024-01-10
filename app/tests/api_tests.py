@@ -1,3 +1,16 @@
+'''
+Module: tests
+Author: Elliot H. Ha
+Created on: Jan 7, 2023
+
+Description:
+This file provides unit tests for testing the interaction with the Spotify API
+
+Functions:
+- test_get_user_info(self, mock_get): Tests the get_user_info() function from api.spotify.py.
+Successful test on returned response matching mock_response with mock user data
+'''
+
 import unittest
 from unittest.mock import patch
 

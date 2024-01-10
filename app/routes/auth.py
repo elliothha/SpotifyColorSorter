@@ -1,3 +1,16 @@
+'''
+Module: routes
+Author: Elliot H. Ha
+Created on: Dec 27, 2023
+
+Description:
+This file provides Flask routes to interact with the Spotify OAuth 2.0 Workflow.
+It includes routes for app startup, as well as handling the Spotify callback.
+
+Routes:
+- @auth_bp.route('/'): On app startup, redirects client to the Spotify login authorization URL
+- @auth_bp.route('/callback'): This route handles the callback redirection upon successful login
+'''
 
 import base64
 import requests

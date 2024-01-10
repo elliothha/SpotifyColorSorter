@@ -1,5 +1,5 @@
 '''
-Module: utils.py
+Module: utils
 Author: Elliot H. Ha
 Created on: Dec 27, 2023
 

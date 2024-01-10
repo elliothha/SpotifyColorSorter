@@ -1,3 +1,24 @@
+'''
+Module: routes
+Author: Elliot H. Ha
+Created on: Dec 27, 2023
+
+Description:
+This file provides functions and routes to handle the main sorting logic for Spotify playlists.
+It interacts with both the Spotify API as well as data to/from the rendered HTML template.
+
+Functions:
+- chunk_list(lst, chunk_size): This function helps handles Spotify's pagination limit of 100 tracks.
+If there is a playlist ('lst') with more than 100 tracks, it returns a list of lists of the 
+playlist tracks broken up into "chunks" of size 'chunk_size' (default=100).
+
+Routes:
+- @sorting_bp.route('/sorter'): This route is called at the end of the @auth_bp.route('/callback')
+route. It renders the playlist.html template with all of the user's playlist data
+- @sorting_bp.route('/sort_playlist/<playlist_id>'): This route is called whenever the user clicks
+on the "sort" button for any of the playlists rendered in the playlist.html template. 
+It contains the MAIN SORTING LOGIC for the actual sorting of the playlist tracks.
+'''
 
 import requests
 import time
@@ -9,7 +30,7 @@ from ..utils.image_processing import download_image, get_dominant_color, rgb_to_
 
 sorting_bp = Blueprint('sorting', __name__)
 
-def chunk_list(lst, chunk_size):
+def chunk_list(lst, chunk_size=100):
     '''Yield successive chunk_size chunks from lst.'''
     for i in range(0, len(lst), chunk_size):
         yield lst[i:i + chunk_size]
