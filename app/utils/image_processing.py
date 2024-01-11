@@ -9,8 +9,11 @@ It includes functions for extracting Image URLs and their dominant color, conver
 
 Functions:
 - download_image(image_url): returns the PIL Image of the playlist image URL passed as an argument
+
 - rgb_to_lab(rgb_color): returns the LAB color space equivalent to the RGB value passed as an argument
+
 - lab_color_distance(lab1, lab2): returns the linear distance between two LAB values in color space
+
 - get_dominant_color(image, palette_size): returns the RGB values of the dominant color in a given PIL Image 
 '''
 

@@ -15,6 +15,7 @@ playlist tracks broken up into "chunks" of size 'chunk_size' (default=100).
 Routes:
 - @sorting_bp.route('/sorter'): This route is called at the end of the @auth_bp.route('/callback')
 route. It renders the playlist.html template with all of the user's playlist data
+
 - @sorting_bp.route('/sort_playlist/<playlist_id>'): This route is called whenever the user clicks
 on the "sort" button for any of the playlists rendered in the playlist.html template. 
 It contains the MAIN SORTING LOGIC for the actual sorting of the playlist tracks.

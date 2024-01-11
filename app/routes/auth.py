@@ -9,6 +9,7 @@ It includes routes for app startup, as well as handling the Spotify callback.
 
 Routes:
 - @auth_bp.route('/'): On app startup, redirects client to the Spotify login authorization URL
+
 - @auth_bp.route('/callback'): This route handles the callback redirection upon successful login
 '''
 

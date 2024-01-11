@@ -7,12 +7,15 @@ Description:
 This file provides unit tests for testing the interaction with the Spotify API
 
 Functions:
+- setUp(self): Creates a new Flask app instance for testing and pushes the app context
+
+- tearDown(self): Deconstructs the test application context
+
 - test_get_auth_url(self): Tests the get_auth_url() function
 Successful test on proper URL formation
+
 - test_get_user_info(self, mock_get): Tests the get_user_info() function
 Successful test on returned response matching mock_response with mock user data
-- test_get_owned_playlists(): Tests the get_owned_playlists() function
-Successful test on proper data retrieval, pagination handling, and filtering logic
 '''
 
 import unittest
@@ -20,12 +23,11 @@ import urllib.parse
 from unittest.mock import patch
 
 from app import REDIRECT_URI, SCOPE, create_app
-from app.api.spotify import get_auth_url, get_user_info, get_track_info, get_owned_playlists
+from app.api.spotify import get_auth_url, get_user_info
 
 class TestAPIInteraction(unittest.TestCase):
 
     def setUp(self):
-        # Creates a new Flask app instance for testing and pushes the application context
         self.app = create_app()
         self.app.config['CLIENT_ID'] = 'dummy_client_id'
         self.ctx = self.app.app_context()
@@ -33,7 +35,6 @@ class TestAPIInteraction(unittest.TestCase):
         self.maxDiff = None
     
     def tearDown(self):
-        # Deconstructs the test application context
         self.ctx.pop()
 
     def test_get_auth_url(self):
@@ -76,14 +77,7 @@ class TestAPIInteraction(unittest.TestCase):
             url='https://api.spotify.com/v1/me', 
             headers={'Authorization': f'Bearer {access_token}'}
         )
-    
-    def test_get_track_info():
-        return None
 
-    def test_get_owned_playlists():
-        return None
-
-    
 
 if __name__ == '__main__':
     unittest.main()

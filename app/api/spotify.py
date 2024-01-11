@@ -9,8 +9,10 @@ It includes functions to authenticate, fetch user data, playlists, and tracks.
 
 Functions:
 - get_auth_url(): returns the URL to the Spotify OAuth login page for use in redirecting users on app start
+
 - get_user_info(access_token): returns the profile information of the current logged-in user after authenticating
     https://developer.spotify.com/documentation/web-api/reference/get-current-users-profile
+    
 - get_owned_playlists(access_token): returns a dict of playlists owned by the user that have at least 1 track in them
     https://developer.spotify.com/documentation/web-api/reference/get-a-list-of-current-users-playlists
 ''' 
