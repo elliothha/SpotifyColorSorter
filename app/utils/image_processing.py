@@ -34,6 +34,8 @@ def download_image(image_url):
 
 # ---- COLOR PROCESSING -----------------------------------------------
 def rgb_to_lab(rgb_color):
+    # INPUT rgb_color = tuple (R, G, B) each value in range [0, 255]
+    # OUTPUT lab_color = NP array with 3 int elements [L, a, b] in LAB space
     bgr_color = rgb_color[::-1]
 
     lab_color = cv2.cvtColor(np.uint8([[bgr_color]]), cv2.COLOR_BGR2LAB)[0][0]
@@ -47,15 +49,25 @@ def lab_color_distance(lab1, lab2):
     return np.sqrt(np.sum((lab1 - lab2) ** 2))
 
 
-def get_dominant_color(image, palette_size=16):
+def get_dominant_colors(image, palette_size=16, top_colors=3):
     image.thumbnail((300, 300))
 
     paletted = image.convert('P', palette=Image.ADAPTIVE, colors=palette_size)
-    # palette = [R1, G1, B1, R2, G2, B2, ...] with values in range [0, 255]. slice to get each color
+    # palette = [R1, G1, B1, R2, G2, B2, ...] 
+    # with values in range [0, 255]. slice to get each color
     palette = paletted.getpalette()
 
+    # .getcolors() returns a list of tuples: [(freq (int), idx (int))]
+    # the idx is the index of the color in the palette
+    # the sort is by frequency of color count in descending order (most frequent -> leasta)
     color_counts = sorted(paletted.getcolors(), reverse=True)
-    dominant_idx = color_counts[0][1]
 
-    dominant_color = palette[dominant_idx*3:dominant_idx*3+3]
-    return dominant_color
+    num_extract = min(len(color_counts), top_colors)
+
+    # top_color_indices will be [idx_1, idx_2, idx_3] of the top 3 most dominant colors
+    # top_3_colors will slice palette according to these indices to return a list of tuples
+    # top_3_colors = [(R_top1, G_top1, B_top1), ..., (R_top3, G_top3, B_top3)]
+    top_color_indices = [color_count[1] for color_count in color_counts[:num_extract]]
+    top_colors = [palette[idx*3:idx*3+3] for idx in top_color_indices]
+
+    return top_colors

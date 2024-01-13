@@ -31,6 +31,7 @@ USER_PLAYLISTS_URL = 'https://api.spotify.com/v1/me/playlists'
 
 def get_auth_url():
     CLIENT_ID = current_app.config['CLIENT_ID']
+    print(CLIENT_ID)
     params = {
         'response_type': 'code',
         'redirect_uri': REDIRECT_URI,
@@ -111,7 +112,6 @@ def get_track_info(access_token, playlist_id):
             break
 
         data = response.json()
-        print(f'HOW MANY TRACKS HERE: {len(data["items"])}')
 
         for item in data['items']:
             track_id = item['track']['id']
@@ -124,7 +124,5 @@ def get_track_info(access_token, playlist_id):
             track_info[track_id] = image_url
 
         url = data.get('next')
-        print(f'NOT IN COUNT: {not_in}, IN COUNT: {in_count}')
-        print(f'NEXT URL IS {url}')
     
     return track_info

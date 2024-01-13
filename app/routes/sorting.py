@@ -21,13 +21,14 @@ on the "sort" button for any of the playlists rendered in the playlist.html temp
 It contains the MAIN SORTING LOGIC for the actual sorting of the playlist tracks.
 '''
 
-import requests
 import time
+import requests
+import numpy as np
 
 from flask import Blueprint, session, render_template, jsonify
 
 from ..api.spotify import get_user_info, get_track_info, get_owned_playlists
-from ..utils.image_processing import download_image, get_dominant_color, rgb_to_lab, lab_color_distance
+from ..utils.image_processing import download_image, get_dominant_colors, rgb_to_lab, lab_color_distance
 
 sorting_bp = Blueprint('sorting', __name__)
 
@@ -35,6 +36,58 @@ def chunk_list(lst, chunk_size=100):
     '''Yield successive chunk_size chunks from lst.'''
     for i in range(0, len(lst), chunk_size):
         yield lst[i:i + chunk_size]
+
+def cosine_similarity(vec1, vec2):
+    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+def sort_tracks(access_token, playlist_id):
+    track_info = get_track_info(access_token, playlist_id)
+    
+    tracks_with_colors = []
+
+    for track_id, image_url in track_info.items():
+        img = download_image(image_url)
+        top_rgb_colors = get_dominant_colors(img)
+
+        # top_3_lab_colors = NP array [[L1, a1, b1], [L2, a2, b2], [L3, a3, b3]]
+        top_lab_colors = [rgb_to_lab(rgb_color) for rgb_color in top_rgb_colors]
+
+        # lab_color_vector = 9D vector in LAB space [L1, a1, b1, L2, a2, b2, L3, a3, b3]
+        lab_color_vector = np.array(top_lab_colors).flatten()
+
+        tracks_with_colors.append((track_id, lab_color_vector))
+
+    # print('TRACKS WITH COLORS (ID, vector)')
+    # print(tracks_with_colors)
+
+    sorted_track_ids = []
+    # Our starting reference color vector will be the first lab_color_vector in the list
+    reference_vector = tracks_with_colors[0][1]
+
+    tracks_with_colors.sort(
+        key=lambda x: cosine_similarity(vec1=reference_vector, vec2=x[1]), 
+        reverse=True
+    )
+    
+    # while tracks_with_colors:
+    #     # Cosine similarity has range [-1, 1], with higher value = vectors are more similar
+    #     # Thus, sort in reverse (descending) order to get similar colors next to each other
+    #     tracks_with_colors.sort(
+    #         key=lambda x: cosine_similarity(vec1=x[1], vec2=reference_vector), 
+    #         reverse=True
+    #     )
+    #
+    #    # I want to iteratively update the reference vector to the latest addition
+    #    # Thus, each sort will be in reference to the most recent album cover
+    #    most_similar_track_id, most_similar_lab_vector = tracks_with_colors.pop(0)
+    #    sorted_track_ids.append(most_similar_track_id)
+    #    reference_vector = most_similar_lab_vector
+
+    # print('SORTED TRACK IDS')
+    # print(sorted_track_ids)
+    # sorted_track_ids = list of track IDs
+    sorted_track_ids = [track[0] for track in tracks_with_colors]
+    return sorted_track_ids
 
 @sorting_bp.route('/sorter')
 def sorter():
@@ -46,33 +99,11 @@ def sorter():
 
 @sorting_bp.route('/sort_playlist/<playlist_id>')
 def sort_playlist(playlist_id):
+    access_token = session.get('access_token')
     print(f'Successfully started sorting route for {playlist_id}')
 
-    access_token = session.get('access_token')
-    track_info = get_track_info(access_token, playlist_id)
-    print(f'LENGTH OF TRACK_INFO: {len(track_info)}')
-    
-    tracks_with_colors = []
-
-    for track_id, image_url in track_info.items():
-        img = download_image(image_url)
-        dominant_color = get_dominant_color(img)
-        # print(f'DOMINANT COLOR: {dominant_color}')
-        tracks_with_colors.append((track_id, rgb_to_lab(dominant_color)))
-
-    print('Successfully obtained tracks with colors from playlist')
-    print(f'LENGTH OF TRACKS_WITH_COLORS): {len(tracks_with_colors)}')
-
-    # Choose a starting reference color, for example, the first color in the list
-    reference_color = tracks_with_colors[0][1]
-
-    # Sort the tracks based on color distance from the reference color
-    tracks_with_colors.sort(key=lambda x: lab_color_distance(x[1], reference_color))
-    print('Successfully implemented sorting algorithm')
-
-    # Extract sorted track IDs
-    sorted_track_ids = [track[0] for track in tracks_with_colors]
-    print(f'LENGTH OF SORTED_TRACK_IDS: {len(sorted_track_ids)}')
+    # sorted_track_ids = list of track IDs
+    sorted_track_ids = sort_tracks(access_token, playlist_id)
 
     # replace the tracks with the sorted order
     url = f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks'
@@ -82,6 +113,7 @@ def sort_playlist(playlist_id):
         'Content-Type': 'application/json'
     }
 
+    # Clearing the playlist first to execute post (replacement) request
     clear_data = {'uris': []}
     clear_response = requests.put(url=url, json=clear_data, headers=headers)
 
@@ -93,12 +125,9 @@ def sort_playlist(playlist_id):
             'response': clear_response.json()
         })
 
-    # Convert track IDs to Spotify URI format
+    # Convert track IDs to Spotify URI format and split this list into chunks of size=100
     track_uris = [f'spotify:track:{track_id}' for track_id in sorted_track_ids]
-    print(f'LENGTH OF TRACK_URIS: {len(track_uris)}')
-    # Split track URIs into chunks of 100
-    track_uri_chunks = list(chunk_list(track_uris, 100))
-    print(track_uri_chunks)
+    track_uri_chunks = list(chunk_list(lst=track_uris, chunk_size=100))
     
     if len(track_uri_chunks) == 1:
         data = {'uris': track_uri_chunks[0]}
