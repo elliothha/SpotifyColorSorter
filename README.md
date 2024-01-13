@@ -31,7 +31,7 @@ First, clone the repository onto your local device using
 git clone https://github.com/elliothha/SpotifyColorSorter.git
 ```
 
-After navigating to the location of the downloaded project directory, create and activate your virtual environment here. After installing the required dependencies, the project will be ready for personal use.
+After navigating to the location of the downloaded project directory, create and activate your virtual environment here. After installing the required dependencies, create a file named ".env" without the quotations, and please reach out for the client information! After setting the environment variables, the project will be ready for personal use.
 
 ```
 # 1. Create the virtual environment
