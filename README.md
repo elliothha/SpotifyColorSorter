@@ -13,6 +13,8 @@ Using this application on your local machine does not track any login data and i
 SCOPE = 'user-read-private playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public'
 ```
 
+Unit tests for testing interaction with Spotify's Web API can be found in [/SpotifyColorSorter/app/tests](/SpotifyColorSorter/app/tests).
+
 ## Getting Started
 
 These instructions will get you a copy of this Flask project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
