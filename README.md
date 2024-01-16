@@ -5,7 +5,13 @@ Utilizes the Spotify Web API and OAuth 2.0 system to securely access only user p
 
 ## Description
 
-Currently, the application is built on the basis of the Pillow ImagePalette module for color palette extraction via clustering algorithms. Using this color palette, a set of the three most dominant (i.e., largest color clusters) RGB colors from a given song's album cover is obtained and concatenated into a 9-dimensional vector in LAB space. Then, the cosine similarity for each vector representation is calculated and it is upon this heuristic that sorting is done. 
+Currently, the application is built on the basis of the Pillow ImagePalette module for color palette extraction via clustering algorithms. Using this color palette, a set of the three most dominant (i.e., largest color clusters) RGB colors from a given song's album cover is obtained and concatenated into a 9-dimensional vector in LAB space. Finally, the cosine similarity for each vector representation is calculated and it is upon this heuristic that sorting is done. 
+
+Using this application on your local machine does not track any login data and is granted these permissions for use in interacting with Spotify's Web API.
+
+```
+SCOPE = 'user-read-private playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public'
+```
 
 ## Getting Started
 
