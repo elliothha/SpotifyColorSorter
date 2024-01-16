@@ -5,9 +5,7 @@ Utilizes the Spotify Web API and OAuth 2.0 system to securely access only user p
 
 ## Description
 
-Currently, the system is built on the basis of KMeans clustering algorithms in order to extract the singular most dominant color in LAB space. However, this has led to suboptimal results via the eye test, as some songs out of the majority appear out of place or disrupt what would otherwise be a singularly smooth color gradient. 
-
-In order to correct this, I plan on expanding on the sorting heuristic by extracting a color "palette" of a number of the most dominant colors in an album cover, rather than just a single color. From here, I would be able to better sort songs to ensure a smooth gradient and reduce the variability inherent in KMeans causing irregularities.
+Currently, the application is built on the basis of the Pillow ImagePalette module for color palette extraction via clustering algorithms. Using this color palette, a set of the three most dominant (i.e., largest color clusters) RGB colors from a given song's album cover is obtained and concatenated into a 9-dimensional vector in LAB space. Then, the cosine similarity for each vector representation is calculated and it is upon this heuristic that sorting is done. 
 
 ## Getting Started
 
